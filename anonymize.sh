@@ -32,6 +32,14 @@ function verifyArgs() {
   verifyRepoExists "$@"
 }
 
+function verifySubstitutionsExist() {
+  if [[ ! -f 'substitutions.txt' ]]; then
+    echo
+    echored "Configuration file not found. Must be from wherever you call the script in a file \"substitutions.txt\". Exit."
+    exit 2
+  fi
+}
+
 # Applies the function provided as first argument on every line of configurarion file
 function applyForEachLine() {
   # Test line by line:
@@ -114,10 +122,17 @@ function clearDotFiles() {
     cd "$BASEDIR"
 }
 
+
+
+# ---------
+
 # Main procedure of program
 verifyArgs "$@"
 
+# Verify config file is there
+# Verify config file syntax is ok
 echo -n "Runting syntax check on config file... "
+verifySubstitutionsExist
 applyForEachLine verifSubstitutionSyntax
 echo "OK"
 
