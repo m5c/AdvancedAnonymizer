@@ -104,6 +104,16 @@ function caseInsensitiveSearch() {
     cd "$BASEDIR"
 }
 
+function clearGit() {
+    cd "$FULL_COPY_PATH"
+
+    rm -rf .git
+    rm .gitignore
+
+    # Go back to base dir
+    cd "$BASEDIR"
+}
+
 # Main procedure of program
 verifyArgs "$@"
 
@@ -118,10 +128,18 @@ echo -n "Creating copy of original project... "
 createProjectCopy "$1"
 echo "OK"
 
+echo -n "Clearing traces of git... "
+clearGit
+echo "OK"
+
 echo -n "Applying file content substitutions on project copy... "
 echo ""
 applyForEachLine substituteContentString
 echo "OK"
+
+# Substitute all occurrences in directory names
+
+# Substitute all occurrences in file names
 
 #echo -n "Applying file content substitutions on project copy... "
 
