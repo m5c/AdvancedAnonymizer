@@ -134,23 +134,22 @@ verifyArgs "$@"
 echo -n "Runting syntax check on config file... "
 verifySubstitutionsExist
 applyForEachLine verifSubstitutionSyntax
-echo "OK"
+echogreen "OK"
 
 # Rememeber base dir so we can revert when needed
 BASEDIR=$(pwd)
 
 echo -n "Creating copy of original project... "
 createProjectCopy "$1"
-echo "OK"
+echogreen "OK"
 
 echo -n "Clearing traces of git... "
 clearDotFiles
-echo "OK"
+echogreen "OK"
 
 echo -n "Applying file content substitutions on project copy... "
-echo ""
 applyForEachLine substituteContentString
-echo "OK"
+echogreen "OK"
 
 # Substitute all occurrences in directory names
 
@@ -158,10 +157,11 @@ echo "OK"
 
 #echo -n "Applying file content substitutions on project copy... "
 
-echo "Checking for case insensitive remainders... "
+echo -n "Checking for case insensitive remainders... "
 unset CLEAR
 applyForEachLine caseInsensitiveSearch
 if [[ -z "$CLEAR" ]]; then
+  echogreen "OK"
   echogreen "Clear! Here's your anonyous copy: $FULL_COPY_PATH"
 fi
 exit 0
