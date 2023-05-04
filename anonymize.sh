@@ -1,4 +1,5 @@
 #! /bin/bash
+#set -x
 # Advanced Anonymizer
 # Consumes a folder and recursively substitues all provided keywords by their replacements.
 # Afterwards searches for case insensitive occurrences of keywords and warn about remaining breadcrumbs.
@@ -53,7 +54,16 @@ function applyForEachLine() {
 
 # Verifies that a provided line consists of two alphanumeric words, spearated bya single space.
 function verifSubstitutionSyntax() {
-  [[ ! "$*" =~ ^[a-zA-Z0-9]+\ [a-zA-Z0-9]+$ ]] && echo "" && echo "Config file has invalid syntax line: \"$SUBST_LINE\". Exit." && exit 22
+  [[ ! "$*" =~ ^[a-zA-Z0-9]+\ [a-zA-Z0-9]+$ ]] && echo "" && echored "Config file has invalid syntax line: \"$SUBST_LINE\". Exit." && exit 22
+
+  # Also verify the key and substition are distinct
+  SEARCH=$(echo "$1" | cut -d ' ' -f1)
+  REPLACE=$(echo "$1" | cut -d ' ' -f2)
+  if [ "$SEARCH" == "$REPLACE" ]; then
+    echo ""
+    echored "Illegal substitution request. Key and replacement must not be identical"
+    exit 22
+  fi
 }
 
 # Defininitely creates a new copy, no matter if there already is one or not
@@ -90,6 +100,37 @@ function substituteContentString() {
 
   # Go back to base dir
   cd "$BASEDIR"
+}
+
+# stearting with project root runs a BFS and renames all occurrences of provided substitution
+function substituteDirectoriesAndFiles() {
+
+    # Make sure to run replacement in project copy
+    cd "$FULL_COPY_PATH"
+
+    SEARCH=$(echo "$1" | cut -d ' ' -f1)
+    REPLACE=$(echo "$1" | cut -d ' ' -f2)
+
+    # iterate over tree structure dealing with one subsitution at a time.
+    REMAINING=$(find . | grep "$SEARCH" | head -n 1)
+    while [[ -n "$REMAINING" ]]; do
+
+
+      # Substitute first item in list
+      FIRST_OCCURRENCE=$(echo "$REMAINING" | cut -d ' ' -f1)
+#            SUBSTITUTED_OCCURRENCE=$(echo "${OCCURRENCE/$SEARCH/$REPLACE}")
+      SUBSTITUTED_OCCURRENCE=$(echo "$FIRST_OCCURRENCE" | sed "s/$SEARCH/$REPLACE/g")
+
+      echo "RENAME: $FIRST_OCCURRENCE => $SUBSTITUTED_OCCURRENCE"
+
+      mv "$FIRST_OCCURRENCE" "$SUBSTITUTED_OCCURRENCE"
+
+      # Update remaining list
+      REMAINING=$(find . | grep "$SEARCH"  | head -n 1)
+    done
+
+    # Go back to base dir
+    cd "$BASEDIR"
 }
 
 # Function to search only for key worlds, but case insensitive
@@ -136,7 +177,11 @@ verifySubstitutionsExist
 applyForEachLine verifSubstitutionSyntax
 echogreen "OK"
 
-# Rememeber base dir so we can revert when needed
+# Set encoding
+export LC_CTYPE=C
+export LANG=C
+
+# Remember base dir so we can revert when needed
 BASEDIR=$(pwd)
 
 echo -n "Creating copy of original project... "
@@ -152,10 +197,9 @@ applyForEachLine substituteContentString
 echogreen "OK"
 
 # Substitute all occurrences in directory names
-
-# Substitute all occurrences in file names
-
-#echo -n "Applying file content substitutions on project copy... "
+echo -n "Applying folder name substitutions on project copy... "
+applyForEachLine substituteDirectoriesAndFiles
+echogreen "OK"
 
 echo -n "Checking for case insensitive remainders... "
 unset CLEAR
