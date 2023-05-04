@@ -3,6 +3,11 @@
 # Consumes a folder and recursively substitues all provided keywords by their replacements.
 # Afterwards searches for case insensitive occurrences of keywords and warn about remaining breadcrumbs.
 
+# Print argument in RED
+function echored {
+        echo -e "\033[00;31m$1\033[00;39m"
+}
+
 function verifyRepoExists() {
   # Check it first argument points to valid directory
   if [[ ! -d $1 ]]; then
@@ -38,10 +43,83 @@ function verifSubstitutionSyntax() {
   [[ ! "$*" =~ ^[a-zA-Z0-9]+\ [a-zA-Z0-9]+$ ]] && echo "" && echo "Config file has invalid syntax line: \"$SUBST_LINE\". Exit." && exit 22
 }
 
+# Defininitely creates a new copy, no matter if there already is one or not
+function createProjectCopy() {
+  LOCATION=$(dirname "$1")
+  PROJECT=$(basename "$1")
+
+  # If location not empty, go there
+  if [[ -n $LOCATION ]]; then
+    cd "$LOCATION"
+  fi
+
+  # If target directory already exists, remove it
+  ANONYMIZED_PROJECT=Anonymized"$PROJECT"
+  if [[ -d "$ANONYMIZED_PROJECT" ]]; then
+    rm -rf "$ANONYMIZED_PROJECT"
+  fi
+  cp -r "$PROJECT" "$ANONYMIZED_PROJECT"
+  cd $ANONYMIZED_PROJECT
+  export FULL_COPY_PATH=$(pwd)
+  cd $BASEDIR
+}
+
+# Function that replaces al occurences of first word by occurrences of second word for file CONTENT.
+# Both words are in same first argument and only separated by a space character.
+function substituteContentString() {
+  # Make sure to run replacement in project copy
+  cd "$FULL_COPY_PATH"
+
+  # Substitute all file content occurrences.
+  SEARCH=$(echo "$1" | cut -d ' ' -f1)
+  REPLACE=$(echo "$1" | cut -d ' ' -f2)
+  grep -rl "$SEARCH" . | xargs sed -i '' -e "s/$SEARCH/$REPLACE/g"
+
+  # Go back to base dir
+  cd "$BASEDIR"
+}
+
+# Function to search only for key worlds, but case insensitive
+function caseInsensitiveSearch() {
+    # Make sure to run search in project copy
+    cd "$FULL_COPY_PATH"
+
+    SEARCH=$(echo "$1" | cut -d ' ' -f1)
+    OCCURRENCES=$(grep -irl "$SEARCH" .)
+
+    # print summary of occurrences found:
+    if [[ -n "$OCCURRENCES" ]]; then
+      echored "You may have remaining identifiers!"
+      echo -n "Found \"$SEARCH\" in:"
+      echored "$OCCURRENCES"
+    fi
+
+    # Go back to base dir
+    cd "$BASEDIR"
+}
 
 # Main procedure of program
 verifyArgs "$@"
+
 echo -n "Runting syntax check on config file... "
 applyForEachLine verifSubstitutionSyntax
 echo "OK"
+
+# Rememeber base dir so we can revert when needed
+BASEDIR=$(pwd)
+
+echo -n "Creating copy of original project... "
+createProjectCopy "$1"
+echo "OK"
+
+echo -n "Applying file content substitutions on project copy... "
+echo ""
+applyForEachLine substituteContentString
+echo "OK"
+
+#echo -n "Applying file content substitutions on project copy... "
+
+echo "Checking for case insensitive remainders... "
+applyForEachLine caseInsensitiveSearch
+echo "Done"
 exit 0
