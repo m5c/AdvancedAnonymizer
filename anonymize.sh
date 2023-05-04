@@ -8,6 +8,11 @@ function echored {
         echo -e "\033[00;31m$1\033[00;39m"
 }
 
+# Print argument in GREEN
+function echogreen {
+        echo -e "\033[00;32m$1\033[00;39m"
+}
+
 function verifyRepoExists() {
   # Check it first argument points to valid directory
   if [[ ! -d $1 ]]; then
@@ -59,9 +64,9 @@ function createProjectCopy() {
     rm -rf "$ANONYMIZED_PROJECT"
   fi
   cp -r "$PROJECT" "$ANONYMIZED_PROJECT"
-  cd $ANONYMIZED_PROJECT
+  cd "$ANONYMIZED_PROJECT"
   export FULL_COPY_PATH=$(pwd)
-  cd $BASEDIR
+  cd "$BASEDIR"
 }
 
 # Function that replaces al occurences of first word by occurrences of second word for file CONTENT.
@@ -89,6 +94,7 @@ function caseInsensitiveSearch() {
 
     # print summary of occurrences found:
     if [[ -n "$OCCURRENCES" ]]; then
+      CLEAR="NO"
       echored "You may have remaining identifiers!"
       echo -n "Found \"$SEARCH\" in:"
       echored "$OCCURRENCES"
@@ -120,6 +126,9 @@ echo "OK"
 #echo -n "Applying file content substitutions on project copy... "
 
 echo "Checking for case insensitive remainders... "
+unset CLEAR
 applyForEachLine caseInsensitiveSearch
-echo "Done"
+if [[ -z "$CLEAR" ]]; then
+  echogreen "Clear! Here's your anonyous copy: $FULL_COPY_PATH"
+fi
 exit 0
