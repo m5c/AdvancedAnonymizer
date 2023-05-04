@@ -104,11 +104,11 @@ function caseInsensitiveSearch() {
     cd "$BASEDIR"
 }
 
-function clearGit() {
+function clearDotFiles() {
     cd "$FULL_COPY_PATH"
 
-    rm -rf .git
-    rm .gitignore
+    DOTFILES=$(echo \.[a-sA-Z]*)
+    for i in $DOTFILES; do rm -rf $i; done
 
     # Go back to base dir
     cd "$BASEDIR"
@@ -129,7 +129,7 @@ createProjectCopy "$1"
 echo "OK"
 
 echo -n "Clearing traces of git... "
-clearGit
+clearDotFiles
 echo "OK"
 
 echo -n "Applying file content substitutions on project copy... "
