@@ -6,12 +6,12 @@
 
 # Print argument in RED
 function echored {
-        echo -e "\033[00;31m$1\033[00;39m"
+  echo -e "\033[00;31m$1\033[00;39m"
 }
 
 # Print argument in GREEN
 function echogreen {
-        echo -e "\033[00;32m$1\033[00;39m"
+  echo -e "\033[00;32m$1\033[00;39m"
 }
 
 function verifyRepoExists() {
@@ -96,6 +96,11 @@ function substituteContentString() {
   # Substitute all file content occurrences.
   SEARCH=$(echo "$1" | cut -d ' ' -f1)
   REPLACE=$(echo "$1" | cut -d ' ' -f2)
+
+  # Escape dots if present
+  SEARCH=${SEARCH/\./\\\.}
+  REPLACE=${REPLACE/\./\\\.}
+
   grep -rl "$SEARCH" . | xargs sed -i '' -e "s/$SEARCH/$REPLACE/g"
 
   # Go back to base dir
@@ -105,65 +110,65 @@ function substituteContentString() {
 # stearting with project root runs a BFS and renames all occurrences of provided substitution
 function substituteDirectoriesAndFiles() {
 
-    # Make sure to run replacement in project copy
-    cd "$FULL_COPY_PATH"
+  # Make sure to run replacement in project copy
+  cd "$FULL_COPY_PATH"
 
-    SEARCH=$(echo "$1" | cut -d ' ' -f1)
-    REPLACE=$(echo "$1" | cut -d ' ' -f2)
+  SEARCH=$(echo "$1" | cut -d ' ' -f1)
+  REPLACE=$(echo "$1" | cut -d ' ' -f2)
+  # Escape dots if present
+  SEARCH=${SEARCH/\./\\\.}
+  REPLACE=${REPLACE/\./\\\.}
 
-    # iterate over tree structure dealing with one subsitution at a time.
+  # iterate over tree structure dealing with one subsitution at a time.
+  REMAINING=$(find . | grep "$SEARCH" | head -n 1)
+  while [[ -n "$REMAINING" ]]; do
+
+    # Substitute first item in list
+    FIRST_OCCURRENCE=$(echo "$REMAINING" | cut -d ' ' -f1)
+    #            SUBSTITUTED_OCCURRENCE=$(echo "${OCCURRENCE/$SEARCH/$REPLACE}")
+    SUBSTITUTED_OCCURRENCE=$(echo "$FIRST_OCCURRENCE" | sed "s/$SEARCH/$REPLACE/g")
+
+    #      echo "RENAME: $FIRST_OCCURRENCE => $SUBSTITUTED_OCCURRENCE"
+
+    mv "$FIRST_OCCURRENCE" "$SUBSTITUTED_OCCURRENCE"
+
+    # Update remaining list
     REMAINING=$(find . | grep "$SEARCH" | head -n 1)
-    while [[ -n "$REMAINING" ]]; do
+  done
 
-
-      # Substitute first item in list
-      FIRST_OCCURRENCE=$(echo "$REMAINING" | cut -d ' ' -f1)
-#            SUBSTITUTED_OCCURRENCE=$(echo "${OCCURRENCE/$SEARCH/$REPLACE}")
-      SUBSTITUTED_OCCURRENCE=$(echo "$FIRST_OCCURRENCE" | sed "s/$SEARCH/$REPLACE/g")
-
-#      echo "RENAME: $FIRST_OCCURRENCE => $SUBSTITUTED_OCCURRENCE"
-
-      mv "$FIRST_OCCURRENCE" "$SUBSTITUTED_OCCURRENCE"
-
-      # Update remaining list
-      REMAINING=$(find . | grep "$SEARCH"  | head -n 1)
-    done
-
-    # Go back to base dir
-    cd "$BASEDIR"
+  # Go back to base dir
+  cd "$BASEDIR"
 }
 
 # Function to search only for key worlds, but case insensitive
 function caseInsensitiveSearch() {
-    # Make sure to run search in project copy
-    cd "$FULL_COPY_PATH"
+  # Make sure to run search in project copy
+  cd "$FULL_COPY_PATH"
 
-    SEARCH=$(echo "$1" | cut -d ' ' -f1)
-    OCCURRENCES=$(grep -irl "$SEARCH" .)
+  SEARCH=$(echo "$1" | cut -d ' ' -f1)
+  OCCURRENCES=$(grep -irl "$SEARCH" .)
 
-    # print summary of occurrences found:
-    if [[ -n "$OCCURRENCES" ]]; then
-      CLEAR="NO"
-      echored "You may have remaining identifiers!"
-      echo -n "Found \"$SEARCH\" in:"
-      echored "$OCCURRENCES"
-    fi
+  # print summary of occurrences found:
+  if [[ -n "$OCCURRENCES" ]]; then
+    CLEAR="NO"
+    echored "You may have remaining identifiers!"
+    echo -n "Found \"$SEARCH\" in:"
+    echored "$OCCURRENCES"
+  fi
 
-    # Go back to base dir
-    cd "$BASEDIR"
+  # Go back to base dir
+  cd "$BASEDIR"
 }
 
 function clearDotFiles() {
-    cd "$FULL_COPY_PATH"
+  cd "$FULL_COPY_PATH"
 
-    DOTFILES=$(echo \.[a-sA-Z]*)
-    for i in $DOTFILES; do rm -rf $i; done
+  DOTFILES=$(echo \.[a-sA-Z]*)
+  for i in $DOTFILES; do rm -rf $i; done
 
-    # Go back to base dir
-    cd "$BASEDIR"
+  # Go back to base dir
+  cd "$BASEDIR"
 }
-
-
 
 # ---------
 
