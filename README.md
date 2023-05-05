@@ -2,6 +2,7 @@
 
 ![bash](https://img.shields.io/badge/Bash-blue)
 ![shellcheck](https://img.shields.io/badge/ShellCheck-blue)
+![macos](https://img.shields.io/badge/MacOSX-blue)
 
 Create *working* anonymous project copies.
 
@@ -46,6 +47,11 @@ Substitution considers:
     * File/Directory *names*
 4) The anonymizer searches once more for all provided keywords, **Case Insensitive** and prints a
    warning for each remaining occurrence.
+
+## Known Issues
+
+ * Overly short key strings may substitute more than you want, as the replacement also triggers on substring. E.g. of you provide a rule ```a x``` then all ```a```s in your text are replaced.
+ * Umlauts in substitution rules are not supported.
 
 ## Author
 

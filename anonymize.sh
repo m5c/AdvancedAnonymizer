@@ -52,9 +52,9 @@ function applyForEachLine() {
   done <"$filename"
 }
 
-# Verifies that a provided line consists of two alphanumeric words, spearated bya single space.
+# Verifies that a provided line consists of two alphanumeric words, spearated bya single space. Words can start with a dot.
 function verifSubstitutionSyntax() {
-  [[ ! "$*" =~ ^[a-zA-Z0-9]+\ [a-zA-Z0-9]+$ ]] && echo "" && echored "Config file has invalid syntax line: \"$SUBST_LINE\". Exit." && exit 22
+  [[ ! "$*" =~ ^\.?[a-zA-Z0-9]+\ \.?[a-zA-Z0-9]+$ ]] && echo "" && echored "Config file has invalid syntax line: \"$SUBST_LINE\". Exit." && exit 22
 
   # Also verify the key and substition are distinct
   SEARCH=$(echo "$1" | cut -d ' ' -f1)
