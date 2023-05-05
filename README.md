@@ -21,13 +21,16 @@ Likewise, this anonymizer treats file and directory names, and applies the same 
 ## Usage
 
 * Create a file ```substitutions.txt```, next to the ```anonymize.sh``` script
-* Provide binary ```keyword substitute``` tuples, a;phanumeric and separated by a single whitespace.
+* Provide binary ```keyword substitute``` tuples, alphanumeric and separated by a single whitespace.  
+Words may begin with a ```.``` character.
   Example:  
 ```txt
 `Maximilian anonymousresearcher`
 `mcgill someuniversity`
+`.ca .country`
 ...
-```
+```  
+ > Note: These are *NOT* regex substition rules.
 
 * Call the anonymizer, provide exatly one argument: the location of your folder to anonymize.  
   Example:  
